@@ -1,20 +1,29 @@
 const { GraphQLServer } = require('graphql-yoga');
-const conexao = require('./infraestrutura/conexao')
-const Tabelas = require('./infraestrutura/database/tabelas')
+const conexao = require('./infraestrutura/conexao');
+const Tabelas = require('./infraestrutura/database/tabelas');
+
+const Operations = require('./infraestrutura/operations');
 
 conexao.connect(erro => {
-  if (erro) {
-    console.log(erro)
-  }
+  if (erro) 
+    console.log(erro);
+  console.log('Banco conectado com sucesso');
 
-  console.log('conectou no banco')
-
-  Tabelas.init(conexao)
+  Tabelas.init(conexao);
 })
+
+const Cliente = new Operations('cliente');
 
 const resolvers = {
   Query: {
-    status: () => 'Servidor rodando'
+    status: () => 'Servidor rodando',
+    clientes: () => Cliente.lista(),
+    cliente: (root, { id }) => Cliente.buscaPorId(id)
+  },
+  Mutation: {
+    adicionarCliente: (root, params) => Cliente.adiciona(params),
+    atualizarCliente: (root, params) => Cliente.atualiza(params),
+    deletarCliente: (root, { id }) => Cliente.deleta(id) 
   }
 };
 

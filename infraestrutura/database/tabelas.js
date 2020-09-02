@@ -5,8 +5,6 @@ class Tabelas {
     this.criaPets()
     this.criaServicos()
     this.criaAtendimentos()
-
-    console.log('tabelas criadas!')
   }
 
   criaClientes() {
