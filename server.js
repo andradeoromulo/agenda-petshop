@@ -1,8 +1,9 @@
 const { GraphQLServer } = require('graphql-yoga');
+const resolvers = require('./graphql/resolvers');
+const typeDefs = require('./graphql/schemas');
+
 const conexao = require('./infraestrutura/conexao');
 const Tabelas = require('./infraestrutura/database/tabelas');
-
-const Operations = require('./infraestrutura/operations');
 
 conexao.connect(erro => {
   if (erro) 
@@ -12,30 +13,9 @@ conexao.connect(erro => {
   Tabelas.init(conexao);
 })
 
-const Cliente = new Operations('cliente');
-const Pet = new Operations('pet');
-
-const resolvers = {
-  Query: {
-    status: () => 'Servidor rodando',
-    clientes: () => Cliente.lista(),
-    cliente: (root, { id }) => Cliente.buscaPorId(id),
-    pets: () => Pet.lista(),
-    pet: (root, { id }) => Pet.buscaPorId(id)
-  },
-  Mutation: {
-    adicionarCliente: (root, params) => Cliente.adiciona(params),
-    atualizarCliente: (root, params) => Cliente.atualiza(params),
-    deletarCliente: (root, { id }) => Cliente.deleta(id),
-    adicionarPet: (root, params) => Pet.adiciona(params),
-    atualizarPet: (root, params) => Pet.atualiza(params),
-    deletarPet: (root, { id }) => Pet.deleta(id)
-  }
-};
-
 const servidor = new GraphQLServer({
   resolvers,
-  typeDefs: './schema.graphql'
+  typeDefs
 });
 
 servidor.start(() => console.log('Servidor rodando na porta 4000'));
