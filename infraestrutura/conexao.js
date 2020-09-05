@@ -5,7 +5,8 @@ const conexao = mysql.createConnection({
   port: 3306,
   user: 'petshop_agenda_admin',
   password: '1234',
-  database: 'petshop-agenda'
+  database: 'petshop-agenda',
+  multipleStatements: true
 })
 
 module.exports = conexao

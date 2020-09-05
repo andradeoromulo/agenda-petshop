@@ -1,39 +1,98 @@
 const executaQuery = require('../database/queries')
 
 class Pet {
-  lista(res) {
-    const sql = 'SELECT * FROM Pets'
+    lista() {
+        const sql = `
+      SELECT p.id, p.nome, p.tipo, p.observacoes, c.id AS donoId, c.nome AS donoNome, c.cpf AS donoCpf
+        FROM Pets p JOIN Clientes c
+          ON p.donoId = c.id     
+    `;
 
-    executaQuery(res, sql)
-  }
+        return executaQuery(sql).then((resultados) =>
 
-  buscaPorId(res, id) {
-    const sql = `SELECT * FROM Pets WHERE id=${parseInt(id)}`
+            resultados.map(pet => ({
+                id: pet.id,
+                nome: pet.nome,
+                tipo: pet.tipo,
+                observacoes: pet.observacoes,
+                dono: {
+                    id: pet.donoId,
+                    nome: pet.donoNome,
+                    cpf: pet.donoCpf
+                }
+            }))
 
-    executaQuery(res, sql)
-  }
+        );
+    }
 
-  adiciona(res, item) {
-    const { nome, dono, tipo, observacoes } = item
+    buscaPorId(id) {
+        const sql = `
+      SELECT p.id, p.nome, p.tipo, p.observacoes, c.id AS donoId, c.nome AS donoNome, c.cpf AS donoCpf 
+        FROM Pets p JOIN Clientes c
+          ON p.donoId = c.id
+        WHERE c.id = ${parseInt(id)}
+    `;
 
-    const sql = `INSERT INTO Pets(nome, donoId, tipo, observacoes) VALUES('${nome}', ${dono}, '${tipo}', '${observacoes}')`
+        return executaQuery(sql).then((resultados) =>
+            ({
+                id: resultados[0].id,
+                nome: resultados[0].nome,
+                tipo: resultados[0].tipo,
+                observacoes: resultados[0].observacoes,
+                dono: {
+                    id: resultados[0].donoId,
+                    nome: resultados[0].donoNome,
+                    cpf: resultados[0].donoCpf
+                }
+            })
+        );
+    }
 
-    executaQuery(res, sql)
-  }
+    adiciona(item) {
+        const { nome, donoId, tipo, observacoes } = item;
 
-  atualiza(res, novoItem, id) {
-    const { nome, dono, tipo, observacoes } = novoItem
+        const sql = `
+            INSERT INTO Pets(nome, donoId, tipo, observacoes) 
+                VALUES('${nome}', ${donoId}, '${tipo}', '${observacoes}');
+            SELECT * FROM Clientes WHERE id=${donoId};
+        `;
 
-    const sql = `UPDATE Pets SET nome='${nome}', donoId=${dono}, tipo='${tipo}', observacoes='${observacoes}' WHERE id=${id}`
+        return executaQuery(sql).then((resultados) => {
+            const id = resultados[0].insertId;
+            const dono = resultados[1][0];
 
-    executaQuery(res, sql)
-  }
+            return ({
+                id,
+                ...item,
+                dono
+            });
+        });
+    }
 
-  deleta(res, id) {
-    const sql = `DELETE FROM Pets WHERE id=${id}`
+    atualiza(item) {
+        const { id, nome, donoId, tipo, observacoes } = item;
 
-    executaQuery(res, sql)
-  }
+        const sql = `
+      UPDATE Pets SET nome='${nome}', donoId=${donoId}, tipo='${tipo}', observacoes='${observacoes}' 
+      WHERE id=${id};
+      SELECT * FROM Clientes WHERE id=${donoId}
+    `;
+
+        return executaQuery(sql).then((resultados) => {
+            const dono = resultados[1][0];
+
+            return ({
+                ...item,
+                dono
+            });
+        });
+    }
+
+    deleta(id) {
+        const sql = `DELETE FROM Pets WHERE id=${id}`;
+
+        return executaQuery(sql).then(() => id);
+    }
 }
 
 module.exports = new Pet
